@@ -29,9 +29,13 @@ flowchart TB
             prom["Prometheus\n:9090\nMetrics Storage"]
             grafana["Grafana\n:3000\nGPU Dashboard"]
         end
-        wslg["WSLg CUDA Demo\nPyTorch CPU vs GPU\nMatplotlib GUI"]
+        subgraph Venv["Python venv (~/cuda-venv)"]
+            wslg["cuda_wslg_demo.py\nPyTorch + Matplotlib\nCPU vs GPU 벤치마크"]
+        end
         gpu["NVIDIA RTX 3080\nCUDA 13.1"]
     end
+
+    win["Windows 11\nWSLg GUI 창 표시"]
 
     n8n -->|"HTTP POST\n/simulate"| worker
     worker -->|"CuPy N-body\nO(N²) 연산"| gpu
@@ -39,6 +43,7 @@ flowchart TB
     prom -->|"scrape :9400\nevery 5s"| dcgm
     grafana -->|"PromQL 쿼리"| prom
     wslg -->|"PyTorch CUDA"| gpu
+    wslg -->|"WSLg GUI"| win
 
     style gpu fill:#76b900,stroke:#333,color:#fff
     style n8n fill:#ff6d5a,stroke:#333,color:#fff
@@ -47,6 +52,8 @@ flowchart TB
     style prom fill:#e6522c,stroke:#333,color:#fff
     style dcgm fill:#8bc34a,stroke:#333,color:#fff
     style wslg fill:#9333ea,stroke:#333,color:#fff
+    style win fill:#0078d4,stroke:#333,color:#fff
+    style Venv fill:#4c1d95,stroke:#7c3aed,color:#fff
 ```
 
 ---
@@ -86,11 +93,59 @@ flowchart LR
 
 ---
 
+## WSLg CUDA 시연 환경
+
+WSLg를 통한 CUDA GUI 시연은 Docker 외부에 별도의 Python 가상환경(venv)을 구성하여 실행합니다.
+
+Ubuntu 24.04에서는 시스템 Python에 직접 pip 설치가 제한(PEP 668)되어 있어 venv를 통해 PyTorch, Matplotlib 등 필요한 패키지를 설치했습니다.
+
+```mermaid
+flowchart LR
+    subgraph WSL2["WSL2 호스트"]
+        VENV["Python venv\n~/cuda-venv"]
+        SCRIPT["cuda_wslg_demo.py\nPyTorch CUDA 벤치마크"]
+        GPU["RTX 3080"]
+    end
+    subgraph Windows["Windows 11"]
+        GUI["WSLg\nMatplotlib GUI 창"]
+    end
+
+    VENV -->|"source activate"| SCRIPT
+    SCRIPT -->|"torch.cuda"| GPU
+    SCRIPT -->|"WSLg\nTkAgg backend"| GUI
+
+    style VENV fill:#4c1d95,stroke:#7c3aed,color:#fff
+    style SCRIPT fill:#9333ea,stroke:#333,color:#fff
+    style GPU fill:#76b900,stroke:#333,color:#fff
+    style GUI fill:#0078d4,stroke:#333,color:#fff
+```
+
+### venv 세팅 방법
+
+```bash
+# Ubuntu 24.04에서 venv 패키지 설치
+sudo apt install -y python3-venv python3-tk
+
+# 가상환경 생성 및 활성화
+python3 -m venv ~/cuda-venv
+source ~/cuda-venv/bin/activate
+
+# PyTorch, Matplotlib 설치
+pip install torch matplotlib
+
+# WSLg 시연 실행
+python3 cuda_wslg_demo.py
+```
+
+실행하면 WSLg를 통해 Windows 바탕화면에 CPU vs GPU 벤치마크 GUI 창이 표시됩니다.
+
+---
+
 ## 프로젝트 구조
 
 ```
 cuda-docker-project/
-├── docker-compose.yml          # 5개 서비스 정의
+├── docker-compose.yml          # 5개 Docker 서비스 정의
 ├── prometheus.yml              # Prometheus scrape 설정
 ├── cuda-worker/
 │   ├── Dockerfile              # CUDA 13.1 + Ubuntu 24.04 + CuPy
@@ -103,7 +158,8 @@ cuda-docker-project/
 │   │       └── default.yml     # 대시보드 프로비저닝 설정
 │   └── dashboards/
 │       └── gpu-dashboard.json  # GPU 모니터링 대시보드
-├── cuda_wslg_demo.py           # WSLg CUDA 시연 (PyTorch GUI)
+├── cuda_wslg_demo.py           # WSLg CUDA 시연 (venv에서 실행)
+├── architecture.mermaid        # 아키텍처 다이어그램
 ├── .gitignore
 └── README.md
 ```
@@ -112,6 +168,8 @@ cuda-docker-project/
 
 ## 서비스 구성
 
+### Docker Compose 서비스 (5개)
+
 | 서비스 | 포트 | 이미지 | 역할 |
 |--------|------|--------|------|
 | n8n | 5678 | `n8nio/n8n` | 워크플로우 자동화 (시뮬레이션 트리거) |
@@ -119,6 +177,13 @@ cuda-docker-project/
 | dcgm-exporter | 9400 | `nvcr.io/nvidia/k8s/dcgm-exporter` | GPU 메트릭 수집 (온도/사용률/전력/메모리) |
 | Prometheus | 9090 | `prom/prometheus` | 메트릭 시계열 저장소 |
 | Grafana | 3000 | `grafana/grafana` | GPU 모니터링 대시보드 & Explore |
+
+### Docker 외부 (WSLg 시연용)
+
+| 구성 | 경로 | 설명 |
+|------|------|------|
+| Python venv | `~/cuda-venv` | PyTorch + Matplotlib 설치된 가상환경 |
+| 시연 스크립트 | `cuda_wslg_demo.py` | CPU vs GPU 벤치마크 → WSLg GUI 출력 |
 
 ---
 
@@ -145,20 +210,18 @@ docker ps  # 5개 컨테이너 running 확인
 3. 또는 **Explore** → `DCGM_FI_DEV_GPU_UTIL` → **Live** 모드로 실시간 확인
 4. n8n 시뮬레이션 실행 시 GPU 사용률/온도/전력 그래프 변화 확인
 
-### 4. WSLg CUDA 시연
+### 4. WSLg CUDA 시연 (Docker 외부 venv)
+
+Ubuntu 24.04의 PEP 668 제한으로 인해 Docker 외부에 별도 Python 가상환경을 구성하여 WSLg 시연을 수행합니다.
 
 ```bash
-# venv 생성 및 활성화 (Ubuntu 24.04)
-sudo apt install -y python3-venv python3-tk
-python3 -m venv ~/cuda-venv
+# 가상환경 활성화
 source ~/cuda-venv/bin/activate
 
-# 패키지 설치 및 실행
-pip install torch matplotlib
+# 시연 실행
+cd ~/cuda-docker-project
 python3 cuda_wslg_demo.py
 ```
-
-WSLg를 통해 Windows 바탕화면에 CPU vs GPU 벤치마크 GUI 창이 표시됩니다.
 
 ---
 

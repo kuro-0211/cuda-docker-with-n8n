@@ -8,9 +8,13 @@ flowchart TB
             prom["Prometheus\n:9090\nMetrics Storage"]
             grafana["Grafana\n:3000\nGPU Dashboard"]
         end
-        wslg["WSLg CUDA Demo\nPyTorch CPU vs GPU\nMatplotlib GUI"]
+        subgraph Venv["Python venv (~/cuda-venv)"]
+            wslg["cuda_wslg_demo.py\nPyTorch + Matplotlib\nCPU vs GPU 벤치마크"]
+        end
         gpu["NVIDIA RTX 3080\nCUDA 13.1"]
     end
+
+    win["Windows 11\nWSLg GUI 창 표시"]
 
     n8n -->|"HTTP POST\n/simulate"| worker
     worker -->|"CuPy N-body\nO(N²) 연산"| gpu
@@ -18,6 +22,7 @@ flowchart TB
     prom -->|"scrape :9400\nevery 5s"| dcgm
     grafana -->|"PromQL 쿼리"| prom
     wslg -->|"PyTorch CUDA"| gpu
+    wslg -->|"WSLg GUI"| win
 
     style gpu fill:#76b900,stroke:#333,color:#fff
     style n8n fill:#ff6d5a,stroke:#333,color:#fff
@@ -26,3 +31,5 @@ flowchart TB
     style prom fill:#e6522c,stroke:#333,color:#fff
     style dcgm fill:#8bc34a,stroke:#333,color:#fff
     style wslg fill:#9333ea,stroke:#333,color:#fff
+    style win fill:#0078d4,stroke:#333,color:#fff
+    style Venv fill:#4c1d95,stroke:#7c3aed,color:#fff
