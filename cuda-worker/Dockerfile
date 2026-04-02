@@ -4,9 +4,8 @@ RUN apt-get update && apt-get install -y \
     python3 python3-pip python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --break-system-packages \
-    flask \
-    cupy-cuda13x
+RUN pip3 install --break-system-packages flask pymysql cryptography
+RUN pip3 install --break-system-packages cupy-cuda13x
 
 WORKDIR /app
 COPY app.py .

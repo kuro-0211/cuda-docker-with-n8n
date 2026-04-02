@@ -60,7 +60,27 @@ services:
       - ./grafana/dashboards:/var/lib/grafana/dashboards
     restart: unless-stopped
 
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=cuda1234
+      - MYSQL_DATABASE=gpu_monitoring
+      - MYSQL_USER=n8n
+      - MYSQL_PASSWORD=n8n1234
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   n8n_data:
   grafana_data:
   prometheus_data:
+  mysql_data:
