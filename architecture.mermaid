@@ -1,0 +1,28 @@
+%% 시스템 전체 아키텍처
+flowchart TB
+    subgraph WSL2["WSL2 (Ubuntu 24.04)"]
+        subgraph Docker["Docker Compose"]
+            n8n["n8n\n:5678\nWorkflow Trigger"]
+            worker["cuda-worker\n:5000\nFlask + CuPy\nN-body Particle Sim"]
+            dcgm["dcgm-exporter\n:9400\nGPU Metrics Collector"]
+            prom["Prometheus\n:9090\nMetrics Storage"]
+            grafana["Grafana\n:3000\nGPU Dashboard"]
+        end
+        wslg["WSLg CUDA Demo\nPyTorch CPU vs GPU\nMatplotlib GUI"]
+        gpu["NVIDIA RTX 3080\nCUDA 13.1"]
+    end
+
+    n8n -->|"HTTP POST\n/simulate"| worker
+    worker -->|"CuPy N-body\nO(N²) 연산"| gpu
+    dcgm -->|"GPU 메트릭 수집"| gpu
+    prom -->|"scrape :9400\nevery 5s"| dcgm
+    grafana -->|"PromQL 쿼리"| prom
+    wslg -->|"PyTorch CUDA"| gpu
+
+    style gpu fill:#76b900,stroke:#333,color:#fff
+    style n8n fill:#ff6d5a,stroke:#333,color:#fff
+    style grafana fill:#f46800,stroke:#333,color:#fff
+    style worker fill:#3b82f6,stroke:#333,color:#fff
+    style prom fill:#e6522c,stroke:#333,color:#fff
+    style dcgm fill:#8bc34a,stroke:#333,color:#fff
+    style wslg fill:#9333ea,stroke:#333,color:#fff

@@ -1,0 +1,223 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "gpu-monitor",
+    "title": "NVIDIA GPU Monitoring - CUDA 13.1",
+    "tags": ["gpu", "nvidia", "cuda"],
+    "timezone": "browser",
+    "schemaVersion": 39,
+    "refresh": "5s",
+    "time": {
+      "from": "now-15m",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "GPU Temperature (°C)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          {
+            "expr": "DCGM_FI_DEV_GPU_TEMP",
+            "legendFormat": "GPU {{gpu}}",
+            "refId": "A"
+          }
+        ],
+        "datasource": { "type": "prometheus", "uid": "" },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "celsius",
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "gradientMode": "scheme"
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "GPU Utilization (%)",
+        "type": "gauge",
+        "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+        "targets": [
+          {
+            "expr": "DCGM_FI_DEV_GPU_UTIL",
+            "legendFormat": "GPU {{gpu}}",
+            "refId": "A"
+          }
+        ],
+        "datasource": { "type": "prometheus", "uid": "" },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 50 },
+                { "color": "red", "value": 80 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "GPU Memory Used (MiB)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+        "targets": [
+          {
+            "expr": "DCGM_FI_DEV_FB_USED",
+            "legendFormat": "GPU {{gpu}}",
+            "refId": "A"
+          }
+        ],
+        "datasource": { "type": "prometheus", "uid": "" },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "decmbytes",
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 20
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "GPU Power Usage (W)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "targets": [
+          {
+            "expr": "DCGM_FI_DEV_POWER_USAGE",
+            "legendFormat": "GPU {{gpu}}",
+            "refId": "A"
+          }
+        ],
+        "datasource": { "type": "prometheus", "uid": "" },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "watt",
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 15
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "GPU SM Clock (MHz)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "targets": [
+          {
+            "expr": "DCGM_FI_DEV_SM_CLOCK",
+            "legendFormat": "SM Clock GPU {{gpu}}",
+            "refId": "A"
+          }
+        ],
+        "datasource": { "type": "prometheus", "uid": "" },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "rotmhz",
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 15
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "GPU Memory Clock (MHz)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+        "targets": [
+          {
+            "expr": "DCGM_FI_DEV_MEM_CLOCK",
+            "legendFormat": "Mem Clock GPU {{gpu}}",
+            "refId": "A"
+          }
+        ],
+        "datasource": { "type": "prometheus", "uid": "" },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "rotmhz",
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 15
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "GPU Memory Free (MiB)",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 6, "x": 12, "y": 16 },
+        "targets": [
+          {
+            "expr": "DCGM_FI_DEV_FB_FREE",
+            "legendFormat": "GPU {{gpu}}",
+            "refId": "A"
+          }
+        ],
+        "datasource": { "type": "prometheus", "uid": "" },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "decmbytes",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red", "value": null },
+                { "color": "yellow", "value": 1000 },
+                { "color": "green", "value": 4000 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "PCIe TX/RX Throughput",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 6, "x": 18, "y": 16 },
+        "targets": [
+          {
+            "expr": "DCGM_FI_DEV_PCIE_TX_THROUGHPUT",
+            "legendFormat": "TX GPU {{gpu}}",
+            "refId": "A"
+          },
+          {
+            "expr": "DCGM_FI_DEV_PCIE_RX_THROUGHPUT",
+            "legendFormat": "RX GPU {{gpu}}",
+            "refId": "B"
+          }
+        ],
+        "datasource": { "type": "prometheus", "uid": "" },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        }
+      }
+    ]
+  },
+  "overwrite": true
+}
